@@ -5,6 +5,7 @@ import {
   getBookingsByEmail,
   loadBookings,
 } from "../services/bookingService.js";
+import { AppError, HttpStatusCode } from "../lib/utils.js";
 
 const router = Router();
 
@@ -158,7 +159,7 @@ router.delete("/:id", async (req, res, next) => {
     const { id } = req.params;
 
     if (!id) {
-      throw new Error("Id required");
+      throw new AppError("Id required", HttpStatusCode.BadRequest);
     }
 
     await deleteBooking(id);

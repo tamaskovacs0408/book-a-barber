@@ -7,6 +7,7 @@ import { apiFetch } from "../lib/utils.js";
 import type { WorkSchedule } from "../types/barbers.ts";
 import type { PublicHolidays } from "../types/publicHolidays.ts";
 import type { Booking } from "../types/bookings.ts";
+import { AppError, HttpStatusCode } from "../lib/utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -55,12 +56,12 @@ export async function createBooking(bookingData: {
   const barbers = await fetchBarbers();
 
   const { email, barberId, date, time } = bookingData;
-  if (!email || !email.includes("@")) throw new Error("Invalid email");
-  if (!barberId) throw new Error("Invalid barberId");
-  if (!date || !time) throw new Error("Invalid datetime");
+  if (!email || !email.includes("@")) throw new AppError("Invalid email", HttpStatusCode.BadRequest);
+  if (!barberId) throw new AppError("Invalid barberId", HttpStatusCode.BadRequest);
+  if (!date || !time) throw new AppError("Invalid datetime", HttpStatusCode.BadRequest);
 
   const barber = barbers.find(barber => barber.id === barberId);
-  if (!barber) throw new Error("Barber not found");
+  if (!barber) throw new AppError("Barber not found", HttpStatusCode.NotFound);
 
   const bookingDate = new Date(`${date}T${time}`);
   const bookingConflict = bookings.some(
@@ -77,25 +78,25 @@ export async function createBooking(bookingData: {
   );
 
   publicHolidays.map(holiday => {
-    if (holiday.date === date) throw new Error("Cannot book on holidays");
+    if (holiday.date === date) throw new AppError("Cannot book on holidays", HttpStatusCode.BadRequest);
   });
 
   const weekday = bookingDate.getDay();
   if (weekday === 0) {
-    throw new Error("Cannot book on Sundays");
+    throw new AppError("Cannot book on Sundays", HttpStatusCode.BadRequest);
   }
 
-  if (isNaN(bookingDate.getTime())) throw new Error("Invalid datetime");
-  if (bookingDate <= new Date()) throw new Error("Cannot book for past date");
-  if (bookingConflict) throw new Error("Time slot already booked");
+  if (isNaN(bookingDate.getTime())) throw new AppError("Invalid datetime", HttpStatusCode.BadRequest);
+  if (bookingDate <= new Date()) throw new AppError("Cannot book for past date", HttpStatusCode.BadRequest);
+  if (bookingConflict) throw new AppError("Time slot already booked", HttpStatusCode.Conflict);
 
   const dayIndex = bookingDate.getDay();
   const dayName = WEEKDAYS[dayIndex];
   const workSchedule = barber.workSchedule[dayName];
 
-  if (!workSchedule) throw new Error("Barber does not work on this day");
+  if (!workSchedule) throw new AppError("Barber does not work on this day", HttpStatusCode.BadRequest);
   if (time < workSchedule.start || time >= workSchedule.end)
-    throw new Error("Time outside of barber's working hours");
+    throw new AppError("Time outside of barber's working hours", HttpStatusCode.BadRequest);
 
   const newBooking: Booking = {
     id: randomUUID(),
@@ -113,7 +114,7 @@ export async function createBooking(bookingData: {
 }
 
 export async function getBookingsByEmail(email: string): Promise<Booking[]> {
-  if (!email) throw new Error("Email required");
+  if (!email) throw new AppError("Email required", HttpStatusCode.BadRequest);
 
   const bookings = await loadBookings();
 
@@ -121,13 +122,13 @@ export async function getBookingsByEmail(email: string): Promise<Booking[]> {
 }
 
 export async function deleteBooking(id: string): Promise<void> {
-  if (!id) throw new Error("Id required");
+  if (!id) throw new AppError("Id required", HttpStatusCode.BadRequest);
 
   const bookings = await loadBookings();
 
   const existedBooking = bookings.some(booking => booking.id === id);
 
-  if (!existedBooking) throw new Error("Booking not found");
+  if (!existedBooking) throw new AppError("Booking not found", HttpStatusCode.NotFound);
 
   const updatedBookings = bookings.filter(booking => booking.id !== id);
 

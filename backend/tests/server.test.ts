@@ -8,6 +8,6 @@ describe("Health check", () => {
       .expect(200)
 
     expect(response.body.status).toBe('ok')
-    expect(response.body.service).toBe('nn-coding-challenge-backend')
+    expect(response.body.service).toBe('book a barber backend')
   })
 })

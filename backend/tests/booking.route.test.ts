@@ -2,6 +2,7 @@ import request from "supertest";
 import { app } from "../src/server";
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import * as bookingService from "../src/services/bookingService";
+import { AppError, HttpStatusCode } from "../src/lib/utils";
 
 vi.mock("../src/services/bookingService", () => ({
   createBooking: vi.fn(),
@@ -46,7 +47,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for invalid email", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Invalid email")
+      new AppError("Invalid email", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -60,7 +61,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for invalid barberId", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Invalid barberId")
+      new AppError("Invalid barberId", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -74,7 +75,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for invalid datetime", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Invalid datetime")
+      new AppError("Invalid datetime", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -88,7 +89,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for past date booking", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Cannot book for past date")
+      new AppError("Cannot book for past date", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -102,7 +103,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for holidays booking", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Cannot book on holidays")
+      new AppError("Cannot book on holidays", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -116,7 +117,7 @@ describe("POST /api/booking", () => {
 
   it("should return 400 for Sundays booking", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Cannot book on Sundays")
+      new AppError("Cannot book on Sundays", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app)
@@ -130,7 +131,7 @@ describe("POST /api/booking", () => {
 
   it("should return 404 for barbers not found", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Barber not found")
+      new AppError("Barber not found", HttpStatusCode.NotFound)
     );
 
     const response = await request(app)
@@ -144,7 +145,7 @@ describe("POST /api/booking", () => {
 
   it("should return 409 if time slot is already booked", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Time slot already booked")
+      new AppError("Time slot already booked", HttpStatusCode.Conflict)
     );
 
     const response = await request(app)
@@ -158,7 +159,7 @@ describe("POST /api/booking", () => {
 
   it("should return 500 for internal server error", async () => {
     (bookingService.createBooking as any).mockRejectedValue(
-      new Error("Internal server error")
+      new AppError("Internal server error", HttpStatusCode.InternalServerError)
     );
 
     const response = await request(app)
@@ -208,7 +209,7 @@ describe("GET - email /api/booking", () => {
 
   it("should return 400 if email is missing", async () => {
     (bookingService.getBookingsByEmail as any).mockRejectedValue(
-      new Error("Email or barberId query parameter is required")
+      new AppError("Email or barberId query parameter is required", HttpStatusCode.BadRequest)
     );
 
     const response = await request(app).get("/api/booking").set({
@@ -223,7 +224,7 @@ describe("GET - email /api/booking", () => {
 
   it("should return 500 for internal server error", async () => {
     (bookingService.getBookingsByEmail as any).mockRejectedValue(
-      new Error("Internal server error")
+      new AppError("Internal server error", HttpStatusCode.InternalServerError)
     );
 
     const response = await request(app)
@@ -271,7 +272,7 @@ describe("GET - barberID /api/booking", () => {
 
   it("should return 500 for internal server error", async () => {
     (bookingService.getBookingsByEmail as any).mockRejectedValue(
-      new Error("Internal server error")
+      new AppError("Internal server error", HttpStatusCode.InternalServerError)
     );
 
     const response = await request(app)
@@ -317,7 +318,7 @@ describe("DELETE =api/booking:id", () => {
 
   it("should return 404 if booking not found", async () => {
     (bookingService.deleteBooking as any).mockRejectedValue(
-      new Error("Booking not found")
+      new AppError("Booking not found", HttpStatusCode.NotFound)
     );
 
     const response = await request(app).delete("/api/booking/booking-4").set({
