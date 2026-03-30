@@ -1,5 +1,5 @@
 import { pgTable, uuid, text } from "drizzle-orm/pg-core";
-import { barbers } from "./barbers.ts";
+import { barbers } from "./barbers.js";
 
 export const bookings = pgTable("bookings", {
   id: uuid("id").defaultRandom().primaryKey(),
